@@ -9,55 +9,60 @@ import io.finch._
 import io.finch.circe._
 import io.circe.generic.auto._
 import java.util.UUID
+import com.twitter.util.Future
 import shapeless._
 
 object Api extends TwitterServer {
-  lazy val listEndpoint   = get("todo") {
-    Ok(Todo.list)
+  import AsyncImplicits._
+
+  lazy val listEndpoint = get("todo") {
+    TodoDb.list().toFuture map (Ok(_))
   }
 
   val createEndpoint = post("todo" :: body.as[TodoUpdate]) { (update: TodoUpdate) =>
-    val todo = Todo.create merge update
-    Todo.list = Todo.list :+ todo
-    Ok(todo)
+    TodoDb.save(Todo.create merge update).toFuture map (Ok(_))
   }
 
   val readEndpoint = get("todo" / uuid) { (id: UUID) =>
-    Todo.list.find(_.id == id) match {
+    TodoDb.find(id).toFuture map {
       case Some(todo) => Ok(todo)
       case None       => notFound(id)
     }
   }
 
   val updateEndpoint = put("todo" / uuid :: body.as[TodoUpdate]) { (id: UUID, update: TodoUpdate) =>
-    Todo.list.find(_.id == id) match {
+    TodoDb.find(id).toFuture flatMap {
       case Some(todo) =>
-        Todo.list = Todo.list map (t => if(t.id == id) todo merge update else t)
-        Ok(todo)
+        val future: Future[Todo] = TodoDb.save(todo merge update).toFuture
+        future.map(Ok(_))
 
-      case None => notFound(id)
+      case None =>
+        Future.value(notFound(id))
     }
   }
 
   val deleteEndpoint = delete("todo" / uuid) { (id: UUID) =>
-    Todo.list.find(_.id == id) match {
-      case Some(todo) =>
-        Todo.list = Todo.list.filterNot(_.id == id)
-        Ok(())
-
-      case None => notFound(id)
-    }
+    TodoDb.delete(id).toFuture map (_ => Ok(()))
   }
 
-  val service =
-    (listEndpoint :+: createEndpoint :+: readEndpoint :+: updateEndpoint :+: deleteEndpoint).toService
+  val service = (
+    listEndpoint   :+:
+    createEndpoint :+:
+    readEndpoint   :+:
+    updateEndpoint :+:
+    deleteEndpoint
+  ).toService
 
   def notFound(id: UUID) =
     NotFound(new RuntimeException(s"Not found: ${id}"))
 
   def main(): Unit = {
-    val server = Http.server.serve(":8080", service)
-    onExit { server.close() }
-    Await.ready(server)
+     Await.ready {
+      TodoDb.init().toFuture map { unit =>
+        val server = Http.server.serve(":8080", service)
+        onExit { server.close() }
+        Await.ready(server)
+      }
+    }
   }
 }
