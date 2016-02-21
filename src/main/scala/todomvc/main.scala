@@ -1,6 +1,5 @@
 package todomvc
 
-import bulletin._
 import com.twitter.finagle.{Http, Service}
 import com.twitter.finagle.http.{Request, Response, Status}
 import com.twitter.server.TwitterServer
@@ -19,8 +18,8 @@ object Api extends TwitterServer {
     TodoDb.list().toFuture map (Ok(_))
   }
 
-  val createEndpoint = post("todo" :: body.as[TodoUpdate]) { (update: TodoUpdate) =>
-    TodoDb.save(Todo.create merge update).toFuture map (Ok(_))
+  val createEndpoint = post("todo" :: body.as[UUID => Todo]) { (create: UUID => Todo) =>
+    TodoDb.save(create(UUID.randomUUID)).toFuture map (Ok(_))
   }
 
   val readEndpoint = get("todo" / uuid) { (id: UUID) =>
@@ -30,10 +29,10 @@ object Api extends TwitterServer {
     }
   }
 
-  val updateEndpoint = put("todo" / uuid :: body.as[TodoUpdate]) { (id: UUID, update: TodoUpdate) =>
+  val updateEndpoint = put("todo" / uuid :: body.as[Todo => Todo]) { (id: UUID, update: Todo => Todo) =>
     TodoDb.find(id).toFuture flatMap {
       case Some(todo) =>
-        val future: Future[Todo] = TodoDb.save(todo merge update).toFuture
+        val future: Future[Todo] = TodoDb.save(update(todo)).toFuture
         future.map(Ok(_))
 
       case None =>
