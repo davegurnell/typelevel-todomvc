@@ -10,9 +10,7 @@ trait AsyncImplicits {
   implicit class TaskOps[A](task: Task[A]) {
     def toFuture: Future[A] = {
       val promise = Promise[A]
-      println("Setting up...")
       task.runAsyncInterruptibly { dis: Throwable \/ A =>
-        println("Converting... " + dis)
         dis.fold(
           exn => promise.setException(exn),
           ans => promise.setValue(ans)
