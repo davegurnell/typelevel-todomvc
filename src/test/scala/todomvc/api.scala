@@ -125,8 +125,13 @@ trait ApiMocks extends Scope {
 trait HttpHelpers {
   def jsonRequest[A: Encoder](method: Method, uri: String)(content: A) = {
     val req = Request(method = method, uri = uri)
-    req.setContentString(content.asJson.noSpaces)
+
+    val jsonContent = content.asJson.noSpaces
+
     req.setContentType("application/json")
+    req.setContentString(jsonContent)
+    req.contentLength = jsonContent.length
+
     req
   }
 
