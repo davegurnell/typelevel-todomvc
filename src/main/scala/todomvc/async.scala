@@ -1,7 +1,7 @@
 package todomvc
 
 import com.twitter.util.{Future, Promise}
-import scalaz.{\/, -\/, \/-}
+import scalaz.\/
 import scalaz.concurrent.Task
 
 object AsyncImplicits extends AsyncImplicits

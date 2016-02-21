@@ -1,0 +1,33 @@
+package todomvc
+
+import com.twitter.io.Buf
+import java.util.UUID
+import org.specs2.mutable._
+import scalaz.concurrent.Task
+
+class MockDatabase(var todos: List[Todo]) extends TodoDatabase {
+  def init(): Task[Unit] =
+    Task.now(())
+
+  def list(): Task[List[Todo]] =
+    Task.now(todos)
+
+  def find(id: UUID): Task[Option[Todo]] =
+    Task.now(todos.find(_.id == id))
+
+  def save(todo: Todo): Task[Todo] = {
+    if(todos.exists(_.id == todo.id)) {
+      todos = todos.map(t => if(t.id == todo.id) todo else t)
+    } else {
+      todos = todos :+ todo
+    }
+
+    Task.now(todo)
+  }
+
+  def delete(id: UUID): Task[Boolean] = {
+    val exists = todos.exists(_.id == id)
+    todos = todos.filterNot(_.id == id)
+    Task.now(exists)
+  }
+}

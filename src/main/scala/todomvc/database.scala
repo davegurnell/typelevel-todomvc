@@ -7,7 +7,15 @@ import scalaz._
 import scalaz.Scalaz._
 import scalaz.concurrent.Task
 
-object TodoDb {
+trait TodoDatabase {
+  def init(): Task[Unit]
+  def list(): Task[List[Todo]]
+  def find(id: UUID): Task[Option[Todo]]
+  def save(todo: Todo): Task[Todo]
+  def delete(id: UUID): Task[Boolean]
+}
+
+class DoobieTodoDatabase extends TodoDatabase {
   implicit val uuidMeta = Meta[String].nxmap[UUID](UUID.fromString, _.toString)
 
   val transactor = for {
@@ -54,12 +62,12 @@ object TodoDb {
       .map(_ => todo)
   }
 
-  def delete(id: UUID): Task[Unit] = transactor.flatMap { xa =>
+  def delete(id: UUID): Task[Boolean] = transactor.flatMap { xa =>
     sql"""
       delete from todos where id = $id
     """
       .update.run
       .transact(xa)
-      .map(_ => ())
+      .map(_ > 0)
   }
 }
