@@ -10,7 +10,7 @@ import todomvc.core._
 
 object TodoList {
 
-  case class Props(proxy: ModelProxy[Todos], currentFilter: TodoFilter, ctl: RouterCtl[TodoFilter])
+  case class Props(proxy: ModelProxy[Seq[Todo]], currentFilter: TodoFilter, ctl: RouterCtl[TodoFilter])
 
   case class State(editing: Option[UUID])
 
@@ -35,7 +35,7 @@ object TodoList {
     def render(p: Props, s: State) = {
       val proxy = p.proxy()
       val dispatch = p.proxy.dispatch
-      val todos = proxy.todoList
+      val todos = proxy
       val filteredTodos = todos filter p.currentFilter.accepts
       val activeCount = todos count TodoFilter.Active.accepts
       val completedCount = todos.length - activeCount
@@ -97,5 +97,5 @@ object TodoList {
       .componentDidMount(scope => scope.backend.mounted(scope.props))
     .build
 
-  def apply(proxy: ModelProxy[Todos], currentFilter: TodoFilter, ctl: RouterCtl[TodoFilter]) = component(Props(proxy, currentFilter, ctl))
+  def apply(proxy: ModelProxy[Seq[Todo]], currentFilter: TodoFilter, ctl: RouterCtl[TodoFilter]) = component(Props(proxy, currentFilter, ctl))
 }

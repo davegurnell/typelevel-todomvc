@@ -31,4 +31,9 @@ class MockDatabase(var todos: List[Todo]) extends TodoDatabase {
     todos = todos.filterNot(_.id == id)
     Task.now(exists)
   }
+
+  def sync(todos: List[Todo]): Task[List[Todo]] = {
+    this.todos = todos
+    Task.now(todos)
+  }
 }

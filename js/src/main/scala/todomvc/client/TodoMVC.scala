@@ -62,7 +62,7 @@ object TodoMVC extends JSApp {
     // hook it into Ctrl+Shift+S and Ctrl+Shift+L
     Hooks.hookPersistState("test", AppCircuit)
 
-    AppCircuit.dispatch(InitTodos)
+    AppCircuit.dispatch(InitTodos(Seq(Todo("Test your code!", false))))
     ReactDOM.render(router, dom.document.getElementsByClassName("todoapp")(0))
   }
 }

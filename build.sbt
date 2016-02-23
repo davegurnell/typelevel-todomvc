@@ -27,9 +27,9 @@ lazy val todo = crossProject.in(file("."))
     testFrameworks   += new TestFramework("utest.runner.Framework"),
     emitSourceMaps   := true,
     persistLauncher  := true,
-    // refreshBrowsers <<= refreshBrowsers triggeredBy (ScalaJSKeys.packageJS in Compile),
-    // updateBrowsers  <<= updateBrowsers  triggeredBy (ScalaJSKeys.packageJS in Compile),
     libraryDependencies ++= Seq(
+      // "com.chuusai"                       %%% "shapeless"      % "2.2.5",
+      "io.circe"                          %%% "circe-scalajs"  % "0.3.0",
       "org.scala-js"                      %%% "scalajs-dom"    % "0.9.0",
       "com.github.japgolly.scalajs-react" %%% "core"           % "0.10.4",
       "com.github.japgolly.scalajs-react" %%% "extra"          % "0.10.4",

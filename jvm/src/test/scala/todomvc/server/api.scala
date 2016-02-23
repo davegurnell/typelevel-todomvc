@@ -26,18 +26,15 @@ class ApiSpec extends Specification with HttpHelpers {
   "create endpoint" should {
     "create a todo" in new ApiMocks {
       val request  = postRequest("/todo")(Json.obj(
-        "text"      -> "Do moar stuff".asJson,
+        "title"     -> "Do moar stuff".asJson,
         "completed" -> false.asJson
       ))
       val response = Await.result(api.service(request))
 
-      println("Request  " + request  + " " + request.contentString)
-      println("Response " + response + " " + response.contentString)
-
       response.status mustEqual Status.Ok // TODO: Fails with "400 Required body not present in the request."
 
       val todo4 = response.contentAs[Todo]
-      todo4.text      mustEqual    "Do moar stuff"
+      todo4.title     mustEqual    "Do moar stuff"
       todo4.completed mustEqual    false
       todo4.id        mustNotEqual todo1.id
       todo4.id        mustNotEqual todo2.id
@@ -67,13 +64,10 @@ class ApiSpec extends Specification with HttpHelpers {
   "update endpoint" should {
     "update a todo" in new ApiMocks {
       val request = putRequest(s"/todo/${todo2.id}")(Json.obj(
-        "text"      -> "Done laundry".asJson,
+        "title"      -> "Done laundry".asJson,
         "completed" -> true.asJson
       ))
       val response = Await.result(api.service(request))
-
-      println("Request  " + request  + " " + request.contentString)
-      println("Response " + response + " " + response.contentString)
 
       response.status mustEqual Status.Ok // TODO: Fails with "400 Required body not present in the request."
 
@@ -81,13 +75,16 @@ class ApiSpec extends Specification with HttpHelpers {
       val expected = db.todos.find(_.id == todo2.id).get
 
       actual           mustEqual expected
-      actual.text      mustEqual "Done laundry"
+      actual.title     mustEqual "Done laundry"
       actual.completed mustEqual true
       actual.id        mustEqual todo2.id
     }
 
     "return a 404 if a todo was not found" in new ApiMocks {
-      val request  = putRequest(s"/todo/${UUID.randomUUID}")(Json.obj())
+      val request  = putRequest(s"/todo/${UUID.randomUUID}")(Json.obj(
+        "title"      -> "Done laundry".asJson,
+        "completed" -> true.asJson
+      ))
       val response = Await.result(api.service(request))
 
       response.status mustEqual Status.NotFound
@@ -110,6 +107,21 @@ class ApiSpec extends Specification with HttpHelpers {
 
       response.status mustEqual Status.NotFound
       db.todos mustEqual List(todo1, todo2, todo3)
+    }
+  }
+
+  "sync endpoint" should {
+    "replace all todos" in new ApiMocks {
+      val todo4 = Todo("Eat a big lunch", false)
+      val todo5 = Todo("Sleep", false)
+
+      val request  = putRequest("/todo")(List(todo4, todo5))
+      val response = Await.result(api.service(request))
+
+      response.status mustEqual Status.Ok
+      response.contentAs[List[Todo]] mustEqual List(todo4, todo5)
+
+      db.todos mustEqual List(todo4, todo5)
     }
   }
 }

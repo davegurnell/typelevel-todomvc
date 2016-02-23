@@ -14,6 +14,7 @@ trait TodoDatabase {
   def find(id: UUID): Task[Option[Todo]]
   def save(todo: Todo): Task[Todo]
   def delete(id: UUID): Task[Boolean]
+  def sync(todos: List[Todo]): Task[List[Todo]]
 }
 
 class DoobieTodoDatabase extends TodoDatabase {
@@ -24,51 +25,74 @@ class DoobieTodoDatabase extends TodoDatabase {
     _  <- xa.setMaxConnections(10)
   } yield xa
 
-  def init(): Task[Unit] = transactor.flatMap { xa =>
-    val query = for {
-      _ <- sql"""create table todos(title varchar, completed boolean, id varchar primary key);""".update.run
-      _ <- sql"""insert into todos values ('Create demo webapp', false, ${UUID.randomUUID});""".update.run
-      _ <- sql"""insert into todos values ('Learn Typelevel libraries', false, ${UUID.randomUUID});""".update.run
-      _ <- sql"""insert into todos values ('Take over world', false, ${UUID.randomUUID});""".update.run
-    } yield ()
+  def init(): Task[Unit] =
+    transactor.flatMap { xa =>
+      val action = for {
+        _ <- createTableQuery()
+        _ <- saveQuery(Todo("Create demo webapp", false))
+        _ <- saveQuery(Todo("Learn Typelevel libraries", false))
+        _ <- saveQuery(Todo("Take over world", false))
+      } yield ()
 
-    query.transact(xa)
-  }
+      action.transact(xa)
+    }
 
-  def list(): Task[List[Todo]] = transactor.flatMap { xa =>
+  def list(): Task[List[Todo]] =
+    transactor.flatMap { xa => listQuery().transact(xa) }
+
+  def find(id: UUID): Task[Option[Todo]] =
+    transactor.flatMap { xa =>
+      findQuery(id).transact(xa)
+    }
+
+  def save(todo: Todo): Task[Todo] =
+    transactor.flatMap { xa =>
+      saveQuery(todo).transact(xa).map(_ => todo)
+    }
+
+  def delete(id: UUID): Task[Boolean] =
+    transactor.flatMap { xa =>
+      deleteQuery(id).transact(xa)
+    }
+
+  def sync(todos: List[Todo]): Task[List[Todo]] =
+    transactor.flatMap { xa =>
+      val action = for {
+        _     <- deleteAllQuery()
+        todos <- todos.map(saveQuery).sequenceU
+      } yield todos
+
+      action.transact(xa)
+    }
+
+  def createTableQuery(): ConnectionIO[Int] =
     sql"""
-      select * from todos
-    """
-      .query[Todo]
-      .list
-      .transact(xa)
-  }
+    create table todos(title varchar, completed boolean, id varchar primary key);
+    """.update.run
 
-  def find(id: UUID): Task[Option[Todo]] = transactor.flatMap { xa =>
+  def listQuery(): ConnectionIO[List[Todo]] =
     sql"""
-      select * from todos where id = $id
-    """
-      .query[Todo]
-      .option
-      .transact(xa)
-  }
+    select * from todos
+    """.query[Todo].list
 
-  def save(todo: Todo): Task[Todo] = transactor.flatMap { xa =>
+  def findQuery(id: UUID): ConnectionIO[Option[Todo]] =
     sql"""
-      merge into todos (title, completed, id) key (id)
-      values (${todo.title}, ${todo.completed}, ${todo.id});
-    """
-      .update.run
-      .transact(xa)
-      .map(_ => todo)
-  }
+    select * from todos where id = $id
+    """.query[Todo].option
 
-  def delete(id: UUID): Task[Boolean] = transactor.flatMap { xa =>
+  def saveQuery(todo: Todo): ConnectionIO[Todo] =
     sql"""
-      delete from todos where id = $id
-    """
-      .update.run
-      .transact(xa)
-      .map(_ > 0)
-  }
+    merge into todos (title, completed, id) key (id)
+    values (${todo.title}, ${todo.completed}, ${todo.id});
+    """.update.run.map(_ => todo)
+
+  def deleteQuery(id: UUID): ConnectionIO[Boolean] =
+    sql"""
+    delete from todos where id = $id
+    """.update.run.map(_ > 0)
+
+  def deleteAllQuery(): ConnectionIO[Boolean] =
+    sql"""
+    delete from todos
+    """.update.run.map(_ > 0)
 }

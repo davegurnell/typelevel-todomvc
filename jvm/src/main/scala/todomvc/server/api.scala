@@ -25,9 +25,9 @@ class TodoApi(db: TodoDatabase) {
     }
   }
 
-  val updateEndpoint = put("todo" / uuid :: body.as[Todo => Todo]) { (id: UUID, update: Todo => Todo) =>
+  val updateEndpoint = put("todo" / uuid :: body.as[UUID => Todo]) { (id: UUID, update: UUID => Todo) =>
     db.find(id).toFuture flatMap {
-      case Some(todo) => db.save(update(todo)).toFuture.map(Ok(_))
+      case Some(todo) => db.save(update(todo.id)).toFuture.map(Ok(_))
       case None       => Future.value(notFound(id))
     }
   }
@@ -38,12 +38,17 @@ class TodoApi(db: TodoDatabase) {
     }
   }
 
+  val syncEndpoint = put("todo" :: body.as[List[Todo]]) { (todos: List[Todo]) =>
+    db.sync(todos).toFuture map (Ok(_))
+  }
+
   val endpoints =
     listEndpoint   :+:
     createEndpoint :+:
     readEndpoint   :+:
     updateEndpoint :+:
-    deleteEndpoint
+    deleteEndpoint :+:
+    syncEndpoint
 
   val service = endpoints.toService
 

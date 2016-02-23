@@ -2,7 +2,12 @@ package todomvc.client
 
 import diode._
 import diode.react.ReactConnector
+import io.circe.generic.auto._
+import io.circe.scalajs._
+import io.circe.syntax._
 import java.util.UUID
+import org.scalajs.dom.ext.Ajax
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import todomvc.core._
 
 /**
@@ -11,10 +16,10 @@ import todomvc.core._
   */
 object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
   // define initial value for the application model
-  def initialModel = AppModel(Todos(Seq()))
+  def initialModel = AppModel(Seq.empty)
 
   override val actionHandler = combineHandlers(
-    new TodoHandler(zoomRW(_.todos)((m, v) => m.copy(todos = v)).zoomRW(_.todoList)((m, v) => m.copy(todoList = v)))
+    new TodoHandler(zoomRW(_.todos)((m, v) => m.copy(todos = v)))
   )
 }
 
@@ -26,21 +31,27 @@ class TodoHandler[M](modelRW: ModelRW[M, Seq[Todo]]) extends ActionHandler(model
       case other => other
     }
 
+  def syncUpdated(todos: Seq[Todo]) =
+    updated(todos, syncTodosEffect(todos))
+
+  def syncTodosEffect(todos: Seq[Todo]) =
+    Effect(Ajax.put("/todos", todos.asJson.noSpaces))
+
   override def handle = {
-    case InitTodos =>
+    case InitTodos(todos) =>
       println("Initializing todos")
-      updated(List(Todo("Test your code!", false)))
+      syncUpdated(todos)
     case AddTodo(title) =>
-      updated(value :+ Todo(title, false))
+      syncUpdated(value :+ Todo(title, false))
     case ToggleAll(checked) =>
-      updated(value.map(_.copy(completed = checked)))
+      syncUpdated(value.map(_.copy(completed = checked)))
     case ToggleCompleted(id) =>
-      updated(updateOne(id)(old => old.copy(completed = !old.completed)))
+      syncUpdated(updateOne(id)(old => old.copy(completed = !old.completed)))
     case Update(id, title) =>
-      updated(updateOne(id)(_.copy(title = title)))
+      syncUpdated(updateOne(id)(_.copy(title = title)))
     case Delete(id) =>
-      updated(value.filterNot(_.id == id))
+      syncUpdated(value.filterNot(_.id == id))
     case ClearCompleted =>
-      updated(value.filterNot(_.completed))
+      syncUpdated(value.filterNot(_.completed))
   }
 }
