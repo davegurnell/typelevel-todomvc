@@ -26,7 +26,7 @@ class DoobieTodoDatabase extends TodoDatabase {
 
   def init(): Task[Unit] = transactor.flatMap { xa =>
     val query = for {
-      _ <- sql"""create table todos(text varchar, completed boolean, id varchar primary key);""".update.run
+      _ <- sql"""create table todos(title varchar, completed boolean, id varchar primary key);""".update.run
       _ <- sql"""insert into todos values ('Create demo webapp', false, ${UUID.randomUUID});""".update.run
       _ <- sql"""insert into todos values ('Learn Typelevel libraries', false, ${UUID.randomUUID});""".update.run
       _ <- sql"""insert into todos values ('Take over world', false, ${UUID.randomUUID});""".update.run
@@ -55,8 +55,8 @@ class DoobieTodoDatabase extends TodoDatabase {
 
   def save(todo: Todo): Task[Todo] = transactor.flatMap { xa =>
     sql"""
-      merge into todos (text, completed, id) key (id)
-      values (${todo.text}, ${todo.completed}, ${todo.id});
+      merge into todos (title, completed, id) key (id)
+      values (${todo.title}, ${todo.completed}, ${todo.id});
     """
       .update.run
       .transact(xa)

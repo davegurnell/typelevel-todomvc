@@ -2,8 +2,8 @@ package todomvc.core
 
 import java.util.UUID
 
-case class Todo(text: String, completed: Boolean, id: UUID = UUID.randomUUID)
+case class Todo(title: String, completed: Boolean, id: UUID = UUID.randomUUID)
 
 object Todo {
-  def create = Todo(text = "", completed = false)
+  def create = Todo(title = "", completed = false)
 }
