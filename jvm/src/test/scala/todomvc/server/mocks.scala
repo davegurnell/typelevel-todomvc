@@ -1,9 +1,10 @@
-package todomvc
+package todomvc.server
 
 import com.twitter.io.Buf
 import java.util.UUID
 import org.specs2.mutable._
 import scalaz.concurrent.Task
+import todomvc.core._
 
 class MockDatabase(var todos: List[Todo]) extends TodoDatabase {
   def init(): Task[Unit] =

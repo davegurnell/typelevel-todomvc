@@ -1,10 +1,11 @@
-package todomvc
+package todomvc.server
 
 import com.twitter.util.Future
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
 import java.util.UUID
+import todomvc.core._
 
 class TodoApi(db: TodoDatabase) {
   import AsyncImplicits._

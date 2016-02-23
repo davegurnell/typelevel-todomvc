@@ -1,4 +1,4 @@
-package todomvc
+package todomvc.server
 
 import doobie.contrib.h2.h2transactor._
 import doobie.imports._
@@ -6,6 +6,7 @@ import java.util.UUID
 import scalaz._
 import scalaz.Scalaz._
 import scalaz.concurrent.Task
+import todomvc.core._
 
 trait TodoDatabase {
   def init(): Task[Unit]

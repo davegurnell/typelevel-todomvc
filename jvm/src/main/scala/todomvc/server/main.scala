@@ -1,8 +1,9 @@
-package todomvc
+package todomvc.server
 
 import com.twitter.finagle.Http
 import com.twitter.server.TwitterServer
 import com.twitter.util.Await
+import todomvc.core._
 
 object Main extends TwitterServer {
   import AsyncImplicits._

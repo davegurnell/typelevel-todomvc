@@ -1,4 +1,4 @@
-package todomvc
+package todomvc.server
 
 import cats.data.Xor
 import io.circe._
@@ -10,6 +10,7 @@ import com.twitter.finagle.http.{Status, Method, Request, Response}
 import com.twitter.util.{Await, Future}
 import org.specs2.matcher.Scope
 import org.specs2.mutable._
+import todomvc.core._
 
 class ApiSpec extends Specification with HttpHelpers {
   "list endpoint" should {

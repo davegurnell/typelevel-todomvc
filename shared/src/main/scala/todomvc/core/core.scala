@@ -1,4 +1,4 @@
-package todomvc
+package todomvc.core
 
 import java.util.UUID
 
