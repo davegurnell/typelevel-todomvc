@@ -2,11 +2,7 @@ package todomvc.client
 
 import diode._
 import diode.react.ReactConnector
-import io.circe.generic.auto._
-import io.circe.scalajs._
-import io.circe.syntax._
 import java.util.UUID
-import org.scalajs.dom.ext.Ajax
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import todomvc.core._
 
@@ -32,10 +28,7 @@ class TodoHandler[M](modelRW: ModelRW[M, Seq[Todo]]) extends ActionHandler(model
     }
 
   def syncUpdated(todos: Seq[Todo]) =
-    updated(todos, syncTodosEffect(todos))
-
-  def syncTodosEffect(todos: Seq[Todo]) =
-    Effect(Ajax.put("/todos", todos.asJson.noSpaces))
+    updated(todos, Effect(ApiClient.syncTodos(todos)))
 
   override def handle = {
     case InitTodos(todos) =>

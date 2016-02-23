@@ -42,13 +42,29 @@ class TodoApi(db: TodoDatabase) {
     db.sync(todos).toFuture map (Ok(_))
   }
 
-  val endpoints =
+  val preflightEndpoint = options(*) { Ok() }
+
+  implicit class EndpointOps[A](endpoint: Endpoint[A]) {
+    def withHeaders(headers: Map[String, String]): Endpoint[A] =
+      headers.foldLeft(endpoint)((e, h) => e.withHeader(h._1, h._2))
+  }
+
+  val corsHeaders = Map(
+    "Access-Control-Allow-Origin"  -> "*",
+    "Access-Control-Allow-Methods" -> "GET,POST,PUT,DELETE,HEAD,OPTIONS",
+    "Access-Control-Max-Age"       -> "300",
+    "Access-Control-Allow-Headers" -> "Origin,X-Requested-With,Content-Type,Accept"
+  )
+
+  val endpoints = (
     listEndpoint   :+:
     createEndpoint :+:
     readEndpoint   :+:
     updateEndpoint :+:
     deleteEndpoint :+:
-    syncEndpoint
+    syncEndpoint   :+:
+    preflightEndpoint
+  ) withHeaders (corsHeaders)
 
   val service = endpoints.toService
 

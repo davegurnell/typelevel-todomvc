@@ -11,11 +11,10 @@ object Main extends TwitterServer {
   val db  = new DoobieTodoDatabase()
   val api = new TodoApi(db)
 
-  Await.ready {
-    db.init().toFuture map { unit =>
-      val server = Http.server.serve(":8080", api.service)
-      onExit { server.close() }
-      Await.ready(server)
-    }
+  def main(): Unit = {
+    Await.ready(db.init().toFuture)
+    val server = Http.server.serve(":8080", api.service)
+    onExit { server.close() }
+    Await.ready(server)
   }
 }

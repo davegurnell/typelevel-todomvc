@@ -4,6 +4,7 @@ import boopickle.Default._
 import diode.dev.{Hooks, PersistStateIDB}
 import org.scalajs.dom
 
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
 import japgolly.scalajs.react._
@@ -62,7 +63,11 @@ object TodoMVC extends JSApp {
     // hook it into Ctrl+Shift+S and Ctrl+Shift+L
     Hooks.hookPersistState("test", AppCircuit)
 
-    AppCircuit.dispatch(InitTodos(Seq(Todo("Test your code!", false))))
-    ReactDOM.render(router, dom.document.getElementsByClassName("todoapp")(0))
+    println("Loading todos...")
+    ApiClient.loadTodos.foreach { todos =>
+      println("Loaded todos: " + todos)
+      AppCircuit.dispatch(InitTodos(todos))
+      ReactDOM.render(router, dom.document.getElementsByClassName("todoapp")(0))
+    }
   }
 }

@@ -5,14 +5,12 @@ scalaVersion in ThisBuild := "2.11.7"
 
 lazy val todo = crossProject.in(file("."))
   .settings(
-    resolvers += "Twitter Maven" at "http://maven.twttr.com",
-    libraryDependencies ++= Seq(
-      "io.circe"           %% "circe-core"        % "0.3.0",
-      "io.circe"           %% "circe-generic"     % "0.3.0"
-    )
+    resolvers += "Twitter Maven" at "http://maven.twttr.com"
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
+      "io.circe"           %% "circe-core"        % "0.3.0",
+      "io.circe"           %% "circe-generic"     % "0.3.0",
       "org.tpolecat"       %% "doobie-core"       % "0.2.3",
       "org.tpolecat"       %% "doobie-contrib-h2" % "0.2.3",
       "com.github.finagle" %% "finch-core"        % "0.10.0",
@@ -28,8 +26,9 @@ lazy val todo = crossProject.in(file("."))
     emitSourceMaps   := true,
     persistLauncher  := true,
     libraryDependencies ++= Seq(
-      // "com.chuusai"                       %%% "shapeless"      % "2.2.5",
-      "io.circe"                          %%% "circe-scalajs"  % "0.3.0",
+      "io.circe"                          %%% "circe-core"     % "0.3.0",
+      "io.circe"                          %%% "circe-generic"  % "0.3.0",
+      "io.circe"                          %%% "circe-parser"   % "0.3.0",
       "org.scala-js"                      %%% "scalajs-dom"    % "0.9.0",
       "com.github.japgolly.scalajs-react" %%% "core"           % "0.10.4",
       "com.github.japgolly.scalajs-react" %%% "extra"          % "0.10.4",
