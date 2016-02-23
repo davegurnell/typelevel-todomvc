@@ -1,4 +1,4 @@
-package todomvc
+package todomvc.server
 
 import com.twitter.util.{Future, Promise}
 import scalaz.\/
