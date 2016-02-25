@@ -11,7 +11,7 @@ class TodoApi(db: TodoDatabase) {
   import AsyncImplicits._
 
   lazy val listEndpoint = get("todo") {
-    db.list().toFuture map (Ok(_))
+    db.list.toFuture map (Ok(_))
   }
 
   val createEndpoint = post("todo" :: body.as[UUID => Todo]) { (create: UUID => Todo) =>
