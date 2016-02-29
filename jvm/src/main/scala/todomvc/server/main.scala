@@ -8,11 +8,8 @@ import todomvc.core._
 object Main extends TwitterServer {
   import AsyncImplicits._
 
-  val db  = new DoobieTodoDatabase()
-  val api = new TodoApi(db)
-
   def main(): Unit = {
-    Await.ready(db.init().toFuture)
+    val api = Await.result(DoobieTodoDatabase.create.map(new TodoApi(_)).toFuture)
     val server = Http.server.serve(":8080", api.service)
     onExit { server.close() }
     Await.ready(server)

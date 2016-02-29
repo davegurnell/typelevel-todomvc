@@ -7,10 +7,10 @@ import scalaz.concurrent.Task
 import todomvc.core._
 
 class MockDatabase(var todos: List[Todo]) extends TodoDatabase {
-  def init(): Task[Unit] =
+  val init: Task[Unit] =
     Task.now(())
 
-  def list(): Task[List[Todo]] =
+  val list: Task[List[Todo]] =
     Task.now(todos)
 
   def find(id: UUID): Task[Option[Todo]] =
