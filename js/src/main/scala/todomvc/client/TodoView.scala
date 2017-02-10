@@ -39,7 +39,10 @@ object TodoView {
       }
 
     val editFieldChanged: ReactEventI => Callback =
-      e => $.modState(_.copy(editText = e.target.value))
+      e => {
+        val text = e.target.value
+        $.modState(_.copy(editText = text))
+      }
 
     def render(p: Props, s: State): ReactElement = {
       <.li(
